@@ -1,21 +1,27 @@
 Config = {}
+Config.Debug = false -- Enable verbose debug logging for the resource
+Config.MPH = true -- true = MPH, false = KM/H
+Config.UseBlips = true -- Show blips on the map
+Config.UseFlashEffect = true -- Flash camera effect
+Config.UseCameraSound = true -- Play shutter sound when triggered
+Config.FinePlayers = true -- Actually deduct fines
+Config.GracePeriod = 5 -- Grace MPH/KM before fine triggers
+Config.Cooldown = 60 -- Cooldown between triggers per camera
 
-Config.Debug = true
-Config.MPH = true -- Speed unit true = MPH, false = KMH
-Config.UseBlips = true
-Config.UseFlashEffect = true
-Config.UseCameraSound = true
-Config.FinePlayers = true
-Config.GracePeriod = 5
-Config.Cooldown = 10
+-- Dispatch Integration (PS-dispatch only)
+Config.UseDispatch = true -- Enable PS-dispatch alerts for speeding
+Config.DispatchCode = 'speeding' -- Code name in alerts.lua for PS-dispatch
+Config.DispatchPriority = 2 -- PS-dispatch priority
+Config.DispatchJobs = { 'leo' } -- Jobs that receive the alert
 
 Config.Cameras = {
-    {coords = vector4(200.0881, -812.6038, 30.0, 111.9241), speedLimit = 35},
-    {coords = vector4(-232.2226, -687.2715, 32.2644, 142.4031), speedLimit = 35},
-    {coords = vector4(297.6145, -785.9840, 28.2100, 142.3997), speedLimit = 35},
-    {coords = vector4(252.3645, -206.0084, 53.0, 106.0831), speedLimit = 35},
-    {coords = vector4(549.0251, -1043.8633, 36.1711, 81.6666), speedLimit = 35},
+    {coords = vector4(129.4788, -978.7402, 28.3572, 20.5138), speedLimit = 60},
+    {coords = vector4(215.5583, -1012.4580, 28.2797, 70.3095), speedLimit = 60},
+    {coords = vector4(263.2112, -881.4597, 28.1290, 220.4618), speedLimit = 60},
+    {coords = vector4(182.9164, -847.2209, 30.0537, 240.2815), speedLimit = 60},
+    {coords = vector4(237.5170, -600.8360, 41.5681, 200.9582), speedLimit = 60},
 }
+
 Config.Fines = {
     {minSpeed = 35, fine = 150},
     {minSpeed = 40, fine = 300},
@@ -23,6 +29,13 @@ Config.Fines = {
     {minSpeed = 60, fine = 750},
     {minSpeed = 75, fine = 900},
     {minSpeed = 100, fine = 1250},
-    {minSpeed = 125, fine = 1750},
+    {minSpeed = 125, fine = 2000},
+    {minSpeed = 150, fine = 2500},
+    {minSpeed = 175, fine = 3000},
+    {minSpeed = 200, fine = 3500},
+    {minSpeed = 210, fine = 4500},
+    {minSpeed = 220, fine = 5000},
+    
 }
+
 Config.SpeedingNotification = 'You were caught speeding by a camera! Fine issued.'

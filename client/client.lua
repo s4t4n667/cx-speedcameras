@@ -4,7 +4,6 @@ AddEventHandler('onClientResourceStart', function(resourceName)
     end
 end)
 
-local PlayerId = GetPlayerServerId(PlayerPedId())
 local lastTriggered = {}
 
 local function IsEmergencyVehicle(vehicle)
@@ -28,11 +27,13 @@ Citizen.CreateThread(function()
         BeginTextCommandSetBlipName("STRING")
         AddTextComponentString("Speed Camera")
         EndTextCommandSetBlipName(blip)
+
         local prop = CreateObject(propModel, camera.coords.x, camera.coords.y, camera.coords.z, false, false, false)
         SetEntityHeading(prop, camera.coords.w)
         FreezeEntityPosition(prop, true)
+
         if Config.Debug then
-            print("Camera Spawned - Speed Limit: " .. camera.speedLimit .. ", Location: " .. tostring(camera.coords) .. ", Heading: " .. camera.coords.w)
+            print("Camera Spawned - Speed Limit: " .. camera.speedLimit .. ", Location: " .. tostring(camera.coords))
         end
     end
     SetModelAsNoLongerNeeded(propModel)
@@ -79,43 +80,66 @@ AddEventHandler('cx-speedcameras:client:receiveFine', function(speed, limit, fin
     if Config.Debug then
         print("[DEBUG] Received fine event - Speed: " .. speed .. ", Limit: " .. limit .. ", Fine: " .. fine .. ", Camera: " .. cameraIndex)
     end
+
     local playerPed = PlayerPedId()
     local vehicle = GetVehiclePedIsIn(playerPed, false)
     local vehName = GetLabelText(GetDisplayNameFromVehicleModel(GetEntityModel(vehicle))) or "Unknown Vehicle"
-    local playerSpeed = math.floor(speed)
-    local message = ("You were caught going %d MPH in a %s | Speed Limit: %d MPH | A fine of $%d has been deducted from your bank account."):format(
-        playerSpeed,
+    local message = ("You were caught going %d %s in a %s | Speed Limit: %d | Fine: $%d"):format(
+        math.floor(speed),
+        Config.MPH and "MPH" or "KM/H",
         vehName,
         limit,
         fine
     )
 
-    if Config.Debug then print("[DEBUG] Attempting to send email: " .. message) end
+    if Config.Debug then print("[DEBUG] Sending email: " .. message) end
     TriggerServerEvent('qb-phone:server:sendNewMail', {
         sender = "LSPD",
         subject = "Speeding Fine Issued",
         message = message
     })
-    if Config.Debug then print("[DEBUG] Email event triggered") end
 
     if Config.UseFlashEffect then
         SetFlash(0, 0, 200, 150, 200)
-        if Config.Debug then
-            print("[DEBUG] Flash Effect Activated")
-        end
+        if Config.Debug then print("[DEBUG] Flash effect triggered") end
     end
-
     if Config.UseCameraSound then
         PlaySoundFrontend(-1, "Camera_Shoot", "Phone_SoundSet_Default", true)
-        if Config.Debug then
-            print("[DEBUG] Shutter Sound Activated")
-        end
+        if Config.Debug then print("[DEBUG] Shutter sound played") end
+    end
+
+    if Config.UseDispatch then
+        local dispatchData = {
+            message = "Speeding Vehicle Detected",
+            dispatchCode = Config.DispatchCode,
+            code = '10-11',
+            icon = 'fas fa-car',
+            priority = Config.DispatchPriority,
+            coords = GetEntityCoords(playerPed),
+            heading = GetEntityHeading(playerPed),
+            vehicle = vehName,
+            plate = GetVehicleNumberPlateText(vehicle),
+            jobs = Config.DispatchJobs,
+            alert = {
+                radius = 50,
+                sprite = 1,
+                color = 1,
+                scale = 0.7,
+                length = 5,
+                sound = "Lose_1st",
+                sound2 = "GTAO_FM_Events_Soundset",
+                offset = false,
+                flash = true
+            }
+        }
+        TriggerServerEvent('ps-dispatch:server:notify', dispatchData)
+        if Config.Debug then print("[DEBUG] PS-dispatch alert sent") end
     end
 end)
 
 RegisterNetEvent('cx-speedcameras:client:notify')
 AddEventHandler('cx-speedcameras:client:notify', function(message)
-    if Config.Debug then print("[DEBUG] Received notify event: " .. message) end
+    if Config.Debug then print("[DEBUG] Notify event: " .. message) end
     BeginTextCommandThefeedPost('STRING')
     AddTextComponentSubstringPlayerName(message)
     EndTextCommandThefeedPostTicker(true, false)

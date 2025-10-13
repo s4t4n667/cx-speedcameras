@@ -1,8 +1,7 @@
-local DISCORD_WEBHOOK = ''
--- To disable, set DISCORD_WEBHOOK = ''
+local DISCORD_WEBHOOK = '' -- Add your webhook here
+-- To disable Discord notifications, leave as empty string
 
 if Config.Debug then print("[DEBUG] Loading cx-speedcameras server.lua") end
-
 local function GetFine(speed)
     local selectedFine = 0
     for i = #Config.Fines, 1, -1 do
@@ -32,7 +31,8 @@ end
 
 RegisterNetEvent('cx-speedcameras:server:checkFine', function(speed, limit, cameraIndex, vehName, plate)
     local src = source
-    if Config.Debug then print("[DEBUG] checkFine: Triggered for source " .. src .. ", Speed: " .. speed .. ", Limit: " .. limit) end
+    if Config.Debug then print(("[DEBUG] checkFine: Triggered for source %s, Speed: %s, Limit: %s"):format(src, speed, limit)) end
+
     local player = exports.qbx_core:GetPlayer(src)
     if not player then
         if Config.Debug then
@@ -46,26 +46,17 @@ RegisterNetEvent('cx-speedcameras:server:checkFine', function(speed, limit, came
         citizenid = player.PlayerData.citizenid,
         plate = plate
     })
-    if result and #result > 0 then
-        isOwned = true
-    end
+    if result and #result > 0 then isOwned = true end
 
     if Config.Debug then
-        print(("[DEBUG] Vehicle ownership check: Plate %s, Owned: %s"):format(plate, tostring(isOwned)))
+        print(("[DEBUG] Vehicle ownership check: Plate %s, Owned: %s"):format(plate or "N/A", tostring(isOwned)))
     end
 
     if not isOwned then
-        if Config.Debug then
-            print("[DEBUG] Vehicle not owned by player; skipping fine.")
-        end
+        if Config.Debug then print("[DEBUG] Vehicle not owned by player; skipping fine.") end
         local notifyText = 'You were caught speeding, but no fine was issued as the vehicle is not registered to you.'
         if exports.ox_lib then
-            TriggerClientEvent('ox_lib:notify', src, {
-                title = 'Speed Camera',
-                description = notifyText,
-                type = 'inform',
-                duration = 5000
-            })
+            TriggerClientEvent('ox_lib:notify', src, { title = 'Speed Camera', description = notifyText, type = 'inform', duration = 5000 })
         elseif exports.qbx_core.Notify then
             exports.qbx_core:Notify(src, notifyText, 'inform', 5000)
         else
@@ -90,17 +81,20 @@ RegisterNetEvent('cx-speedcameras:server:checkFine', function(speed, limit, came
 
     local notifyText = ('%s Amount: $%d'):format(Config.SpeedingNotification, fine)
     if exports.ox_lib then
-        TriggerClientEvent('ox_lib:notify', src, {
-            title = 'Speed Camera',
-            description = notifyText,
-            type = 'success',
-            duration = 5000
-        })
+        TriggerClientEvent('ox_lib:notify', src, { title = 'Speed Camera', description = notifyText, type = 'success', duration = 5000 })
     elseif exports.qbx_core.Notify then
         exports.qbx_core:Notify(src, notifyText, 'success', 5000)
     else
         TriggerClientEvent('cx-speedcameras:client:notify', src, notifyText)
     end
+
+    TriggerClientEvent('cx-speedcameras:client:psDispatch', src, {
+        speed = speed,
+        limit = limit,
+        cameraIndex = cameraIndex,
+        vehName = vehName,
+        plate = plate
+    })
 
     if DISCORD_WEBHOOK and DISCORD_WEBHOOK ~= '' then
         local embed = {
@@ -119,21 +113,13 @@ RegisterNetEvent('cx-speedcameras:server:checkFine', function(speed, limit, came
                     fine
                 ),
                 color = 16711680,
-                image = {
-                    url = 'https://testing.strataservers.com/cx-scripts/speedcam.png'
-                },
-                footer = {
-                    text = "LSPD Speed Enforcement System"
-                },
+                image = { url = 'https://testing.strataservers.com/cx-scripts/speedcam.png' },
+                footer = { text = "LSPD Speed Enforcement System" },
                 timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
             }
         }
 
-        local payload = json.encode({
-            username = "LSPD Speed Camera",
-            embeds = embed
-        })
-
+        local payload = json.encode({ username = "LSPD Speed Camera", embeds = embed })
         if Config.Debug then print("[DEBUG] Sending Discord payload (webhook configured).") end
 
         PerformHttpRequest(DISCORD_WEBHOOK, function(err, text, headers)
