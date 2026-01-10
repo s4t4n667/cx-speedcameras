@@ -1,13 +1,14 @@
 # CX Speed Cameras (Qbox)
 cx-speedcameras is a FiveM resource for Qbox servers that implements speed cameras to detect and fine players for exceeding speed limits. It features configurable camera locations, tiered fines, visual and audio effects.
 
+**I've been slacking on maintaining this, but i plan on coming around and doing a bit of a overhaul on this resource soon!**
+
 # Changelog
 - **CHANGE**: Now Checks if the vehicle is owned, if not it won't fine but will notify player.
 - **CHANGE**: Added Discord webhooks for Speed Notifications. Set this in `server/server.lua`
 - **FIX**: Before all players recieved the fine, flash, audio when triggering a speedcamera. this is now set to drivers only.
 - **FIX**: Flash now is shorter to make it feel more like a actual flash.
-# Coming Soon
-- Include Police Dispatch Notifications
+- **Feature Added**: - Include ps-dispatch support
 # Preview
 **Click the thumbnail to watch on youtube!**
 [![Watch the video](https://img.youtube.com/vi/ndhhUA55Grw/maxresdefault.jpg)](https://www.youtube.com/watch?v=ndhhUA55Grw)
